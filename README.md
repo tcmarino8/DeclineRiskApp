@@ -18,7 +18,13 @@ Visualize spatial distributions of fish and zooplankton sampling stations across
 - Fish stations shown in black  
 - Zooplankton stations shown in maroon  
 - Interactive region and taxa filters  
-- Hover tooltips reveal station metadata  
+- Hover tooltips reveal station metadata
+  #### SideBar Selections:
+   Display Fish Sataions(checkbox TRUE/FALSE)
+   Display Zooplankton Sataions(checkbox TRUE/FAlSE)
+   Select Regions(SelectInputs multiple = TRUE)
+   
+   
 
 ### Phenology of Risk  
 Monthly critical decline risk for each fish species by region.  
