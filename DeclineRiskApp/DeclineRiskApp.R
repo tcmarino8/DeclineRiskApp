@@ -158,8 +158,7 @@ ui <- fluidPage(
           condition = " input.Tabs == 'Phenology of Risk' 
           || input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data' 
-          || input.Tabs == 'Map' ",
+          || input.Tabs == 'Station Data' ",
           selectInput(                                                                            #Creating Check box input for regions
             'region',
             'Select Regions',
@@ -178,8 +177,7 @@ ui <- fluidPage(
         conditionalPanel(                                                                                #Creating Inputs for Species
           condition = "input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data' 
-          || input.Tabs == 'Map' ",
+          || input.Tabs == 'Station Data' ",
         selectInput(
           'zoops',
           'Select Zooplankton',
@@ -699,7 +697,10 @@ make_10year_prediction_plot <- reactive( {
             addCircleMarkers(data = summary_data,
               lng = ~Longitude,
               lat = ~Latitude,
-              label = ~paste0(Group, " Station ", Station, " || Region: ", Region), labelOptions = labelOptions(textsize = "18px"),
+              popup = ~paste(Group, " Station ", Station, "<br>", 
+                             "Region: ", Region, "<br>",
+                             "Observed: ", Taxa), 
+              labelOptions = labelOptions(textsize = "18px"),
               color = ~ifelse(Group == "Fish", "black", "maroon"),
               radius = 7,
               fillOpacity = 1,
