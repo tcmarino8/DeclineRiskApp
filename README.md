@@ -20,9 +20,9 @@ Visualize spatial distributions of fish and zooplankton sampling stations across
 - Interactive region and taxa filters  
 - Hover tooltips reveal station metadata
   #### SideBar Selections:
-   Display Fish Sataions(checkbox TRUE/FALSE)
-   Display Zooplankton Sataions(checkbox TRUE/FAlSE)
-   Select Regions(SelectInputs multiple = TRUE)
+   - Display Fish Sataions(checkbox TRUE/FALSE)
+   - Display Zooplankton Sataions(checkbox TRUE/FAlSE)
+   - Select Regions(SelectInputs multiple = TRUE)
    
    
 
