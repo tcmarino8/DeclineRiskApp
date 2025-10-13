@@ -133,6 +133,20 @@ months <- c("January", "February", "March", "April", "May", "June",
 
 ## ----ShinyApp--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ui <- fluidPage(
+  tags$head(
+    tags$script(HTML("
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('a[href^=\"#\"]').forEach(function(link) {
+          link.addEventListener('click', function(e) {
+            e.preventDefault();
+            var tabName = this.getAttribute('href').substring(1);
+            var tab = document.querySelector('[data-value=\"' + tabName + '\"]');
+            if (tab) tab.click();
+          });
+        });
+      });
+    "))
+  ),
   titlePanel(div(h3("Bay-Delta Data Explorer"), h1("Phenology-informed decline risk of estuarine fishes and their prey suggests potential for future trophic mismatches"))),
   
   hr(),
@@ -243,16 +257,16 @@ ui <- fluidPage(
     div( style = "width: 70%; float: left; box-sizing: border-box;",                                          
       mainPanel(
         tabsetPanel( id = 'Tabs',
-                     tabPanel("README", includeMarkdown("DeclineRisk.md")),
+                     tabPanel("Guidlines", includeMarkdown("DeclineRisk.md")),
                      tabPanel('Map', 
                               fluidRow(leafletOutput('DeltaMap'), hr(), div(textOutput('Map_blurb'), class = 'custom-text'))),
-                     tabPanel('Phenology of Risk',
+                     tabPanel('Phenology of Risk', value = 'POR',
                               fluidRow(div(textOutput('POR_blurb'), class = 'custom-text'), hr(), plotOutput("PORplot", width = "1000px", height = "90vh"))),
-                     tabPanel('1 Year Risk Predictions',
+                     tabPanel('1 Year Risk Predictions', value = '1yrplots',
                               fluidRow(div(textOutput('SYP_blurb'), class = 'custom-text'), hr(), plotOutput("SingleYearPlot", width = "100%", height = "90vh"))),
-                     tabPanel('10 Year Risk Predictions',
+                     tabPanel('10 Year Risk Predictions', value = '10yrplots',
                               fluidRow(div(textOutput('TYP_blurb'), class = 'custom-text'), hr(), plotOutput("TenYearPlot", width = "100%", height = "90vh"))),
-                     tabPanel('Station Data', 
+                     tabPanel('Station Data', value = "StationData",
                               fluidRow(div(textOutput('StationData_blurb'), class = 'custom-text'), hr(), DTOutput("Station_data"), plotOutput("histogram"))),
                      tabPanel('Additional Information',
                               fluidRow(div(uiOutput('LinktoDataBlurb', class = 'custom-text')), 

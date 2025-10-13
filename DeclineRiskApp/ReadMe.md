@@ -13,9 +13,7 @@ This app accompanies the manuscript
 
 ##  Key Features
 
-
-
-###  [Map](#Map)  
+###  Map  
 Visualize spatial distributions of fish and zooplankton sampling stations across estuarine regions
 - Fish stations shown in black  
 - Zooplankton stations shown in maroon  
@@ -28,7 +26,7 @@ Visualize spatial distributions of fish and zooplankton sampling stations across
    
    
 
-### [Phenology of Risk](#POR)  
+### Phenology of Risk  
 Monthly critical decline risk for each fish species by region.  
 - Points scale by the percentage of annual catch  
 - Saturated colors = high-abundance months (80% annual catch window)  
@@ -38,7 +36,7 @@ Monthly critical decline risk for each fish species by region.
    - Select Fish(checkbox multiple = TRUE)
    - Months(SliderInput multiple = TRUE)
 
-###  [1-Year Risk Predictions](#1yrplots)  
+###  1-Year Risk Predictions  
 Compare mean risk of fish species during their high-abundance periods with that of their zooplankton prey over a one-year window.  
 - Error bars represent “best-case” and “worst-case” model uncertainty bounds
     #### SideBar Selections:
@@ -47,7 +45,7 @@ Compare mean risk of fish species during their high-abundance periods with that 
    - Select Zooplankton(checkbox multiple = TRUE)
    - Years From Present(Single Value SliderInput multiple = TRUE)
 
-###  [10-Year Risk Projections](#10yrplots)  
+###  10-Year Risk Projections  
 Explore projected risk trends over a 10-year period.  
 - Fish = solid lines  
 - Zooplankton = dashed lines  
@@ -59,7 +57,7 @@ Explore projected risk trends over a 10-year period.
    - Select Zooplankton(checkbox multiple = TRUE)
    - Years From Present(Range with End Value SliderInput multiple = TRUE)
 
-###  [Station Data](#StationData)  
+###  Station Data  
 Tabular metadata summarizing the datasets used in modeling.  
 Includes
 - Taxa  
@@ -106,3 +104,22 @@ https://12022001delta.shinyapps.io/DeclineRisk/'
 'If you encounter any bugs or have questions about the app, please contact:
 📧 Tyler Marino — tylermarino.research@gmail.com'
 
+
+## Installation & Usage
+
+### Prerequisites  
+#### Softwares
+Ensure you have R (≥ 4.0) and RStudio installed.
+
+#### Files
+StationSummary.csv
+Fournier_et_al_monthly_risk.csv
+Fournier_et_al_mean_risk.csv
+
+### Install Required Packages  
+Run the following in R
+```r
+install.packages(c(
+  shiny, shinydashboard, shinyWidgets, leaflet, dplyr, 
+  ggplot2, tidyverse, readxl, sf, raster, sp, 
+  DT, RColorBrewer, patchwork, rsconnect
