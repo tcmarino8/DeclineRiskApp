@@ -65,7 +65,14 @@ Includes
 - StartEnd collection years  
 - Total collection years  
 - Mean CPUE (Catch Per Unit Effort)  
-- Number of non-zero occurrences  
+- Number of non-zero occurrences
+ #### SideBar Selections:
+   - Display Fish Sataions(checkbox TRUE/FALSE)
+   - Display Zooplankton Sataions(checkbox TRUE/FAlSE)
+   - Select Regions(SelectInputs multiple = TRUE)
+   - Select Fish(checkbox multiple = TRUE)
+   - Select Zooplankton(checkbox multiple = TRUE)
+   
 
 Interactive search and filtering via DT datatable.
 
