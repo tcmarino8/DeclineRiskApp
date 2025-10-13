@@ -30,18 +30,32 @@ Visualize spatial distributions of fish and zooplankton sampling stations across
 Monthly critical decline risk for each fish species by region.  
 - Points scale by the percentage of annual catch  
 - Saturated colors = high-abundance months (80% annual catch window)  
-- Desaturated colors = low-abundance months  
+- Desaturated colors = low-abundance months
+    #### SideBar Selections:
+   - Select Regions(checkbox multiple = TRUE)
+   - Select Fish(checkbox multiple = TRUE)
+   - Months(SliderInput multiple = TRUE)
 
 ###  1-Year Risk Predictions  
 Compare mean risk of fish species during their high-abundance periods with that of their zooplankton prey over a one-year window.  
-- Error bars represent “best-case” and “worst-case” model uncertainty bounds  
+- Error bars represent “best-case” and “worst-case” model uncertainty bounds
+    #### SideBar Selections:
+   - Select Regions(checkbox multiple = TRUE)
+   - Select Fish(checkbox multiple = TRUE)
+   - Select Zooplankton(checkbox multiple = TRUE)
+   - Years From Present(Single Value SliderInput multiple = TRUE)
 
 ###  10-Year Risk Projections  
 Explore projected risk trends over a 10-year period.  
 - Fish = solid lines  
 - Zooplankton = dashed lines  
 - Shaded areas = uncertainty range  
-- Asterisks denote significant differences in mean risk  
+- Asterisks denote significant differences in mean risk
+    #### SideBar Selections:
+   - Select Regions(checkbox multiple = TRUE)
+   - Select Fish(checkbox multiple = TRUE)
+   - Select Zooplankton(checkbox multiple = TRUE)
+   - Years From Present(Range with End Value SliderInput multiple = TRUE)
 
 ###  Station Data  
 Tabular metadata summarizing the datasets used in modeling.  
