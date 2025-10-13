@@ -158,19 +158,26 @@ ui <- fluidPage(
           condition = " input.Tabs == 'Phenology of Risk' 
           || input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data' ",
+          || input.Tabs == 'Station Data'
+          || input.Tabs == 'Map'",
           selectInput(                                                                            #Creating Check box input for regions
             'region',
             'Select Regions',
             choices = station_regions,
             selected = station_regions,
             multiple = TRUE
-          ),
+          )),
+        conditionalPanel(                                                                                #Creating Inputs for Species
+          condition = " input.Tabs == 'Phenology of Risk' 
+          || input.Tabs == '1 Year Risk Predictions'
+          || input.Tabs == '10 Year Risk Predictions' 
+          || input.Tabs == 'Station Data'",
+          
           selectInput(
             'fish',
             'Select Fish',
             choices = TaxaOptions[1:7],
-            selected = TaxaOptions[1:7], 
+            selected = TaxaOptions[1:3], 
             multiple = TRUE
           )
         ),
@@ -182,7 +189,7 @@ ui <- fluidPage(
           'zoops',
           'Select Zooplankton',
           choices = TaxaOptions[8:17],
-          selected = TaxaOptions[8:17], 
+          selected = TaxaOptions[8:12], 
           multiple = TRUE
         )
         ),
@@ -236,6 +243,7 @@ ui <- fluidPage(
     div( style = "width: 70%; float: left; box-sizing: border-box;",                                          
       mainPanel(
         tabsetPanel( id = 'Tabs',
+                     tabPanel("README", includeMarkdown("DeclineRisk.md")),
                      tabPanel('Map', 
                               fluidRow(leafletOutput('DeltaMap'), hr(), div(textOutput('Map_blurb'), class = 'custom-text'))),
                      tabPanel('Phenology of Risk',
@@ -343,17 +351,9 @@ get_plot_height <- function(POR = FALSE){
     #This table populates the map.
 
 FetchStationSummaryData <- reactive({
-  
+  req(input$fish, input$zooplankton_stations, input$region, input$fish_stations)
   filtered_data <- StationSummaryData
-  
   filtered_data <- filtered_data |> dplyr::filter(Region %in% input$region)                                               # Filter by region
-  
-  
-  species <- c(input$fish, 'Acartiella', 'Limnoithona', 'Pseudodiaptomus', 'Bosmina', 'Sinocalanus',                   # Name desired species, hard include zooplankton???
-               'Acartia', 'Oithona', 'Tortanus', 'Eurytemora', 'Daphnia')
-  species_pattern <- paste(species, collapse = "|")
-  filtered_data <- filtered_data %>%                                                                                      # Filter based on species input, matching species in Taxa column
-    dplyr::filter(str_detect(Taxa, species_pattern))
   # Filter based on group input (fish or zooplankton)
   if (input$fish_stations && input$zooplankton_stations) {                                                                                  # Both fish and zooplankton are selected, no further filtering needed
     return(filtered_data)
@@ -453,55 +453,60 @@ make_phenologyOR_plots <- reactive ({
 #### Single Year Risk Prediction plots ###
       #Input: taxaInputs, regionInputs
       #Output: patchwork of plots.
+
+
 make_1year_risk_plot <- reactive ({
   req(input$fish)
   req(input$zoops)
   req(input$region)
   plots <- list()
-  
+
   fish_species <- input$fish %||% character(0)
   zoop_species <- input$zoops %||% character(0)
-  Selected_Species <- c(fish_species, zoop_species)
   taxaSelected <- c(fish_species, zoop_species)
-  
+
   if (length(taxaSelected) == 0) {
     return (plot(1, 1, type = "n", xlab = "", ylab = "", xlim = c(0, 10), ylim = c(0, 10)))               #Blank Plot If NO TAXA SELECTED
   }
-  
+
   regionSelected <- input$region
   if (length(regionSelected) == 0) {
     return (plot(1, 1, type = "n", xlab = "", ylab = "", xlim = c(0, 10), ylim = c(0, 10)))               #Blank Plot If NO REGION SELECTED
   }
   i <- 0
+  taxa_chosen_data <- FishZoopComparison_data %>%
+    filter(Taxa %in% taxaSelected)
   for (taxa in taxaSelected) {                                                                            #Begin iteration of taxa to make all plots for taxa
-    taxa_spec_data <- FishZoopComparison_data %>% filter(Predator == SpeciesNamesSciNorm[taxa])  %>% filter(Region %in% regionSelected)
+    taxa_spec_data <- taxa_chosen_data %>%
+      filter(Predator == SpeciesNamesSciNorm[taxa],
+             Region %in% regionSelected)
+
     if (length(taxa_spec_data$Region) == 0) {
-      print('No data here')
       next
     }
                                                                                                           #Relevel/Refactor Plots
     taxa_spec_data$Region<-factor(taxa_spec_data$Region, levels = regionSelected)
     taxa_spec_data$Taxa<-as.factor(taxa_spec_data$Taxa)
     taxa_spec_data$Taxa<-relevel(taxa_spec_data$Taxa, taxa)
-    
+
     Oneyrplotdata <- taxa_spec_data
                                     ### NEED TO CHANGE THE NAMES SO THE AXIS SHOW FULL NAME
     Oneyrplotdata <- Oneyrplotdata %>% mutate(Taxa = recode(Taxa, "Spirinchus thaleichthys" = "S. Thaleichthys", "Engraulis mordax" = "E. Mordax", "Atherinopsis californiensis" = "A. Californiensis",  "Clupea pallasii" = "C. Pallasii", "Alosa sapidissima" = "A. sapidissima",  "Morone saxatilis" = "M. saxatilis", "Dorosoma petenense" = "D. petenense")
 )
-    
+
     j <- 0
-    
+
     for (region in unique(taxa_spec_data$Region)) {                                                   #Iterate over regions to make individual species region pair plots.
       taxa_region_spec_data <- Oneyrplotdata %>% filter(Region == region)
       if (length(taxa_region_spec_data$Region) < 1) {
         next
       }
-      
-      
+
+
       ###Filter by year in the future
       taxa_region_spec_data <- taxa_region_spec_data %>% filter(Timesteps == input$SliderYFP1)
-      
-      
+
+
       plot <- taxa_region_spec_data%>% ggplot(aes(x=Taxa, y=Probability))+
         geom_point(aes(color=Region), size=3, position = pd)+
         geom_linerange(aes(ymin=Best, ymax=Worst, group=Region, color=Region, linetype=Group), linewidth=1, position = pd)+
@@ -516,27 +521,37 @@ make_1year_risk_plot <- reactive ({
         scale_linetype_manual(values = LINES2,  'Group') +
         theme(text = element_text(size = 15), title = element_text(size = 14))+
         geom_vline(xintercept = 1.5, linetype="dotted", color = "black", linewidth=1.5)
-      
+
       if (i >= 0 ) {
         plot <- plot + theme(axis.title.x=element_blank(), axis.title.y=element_blank())                  #Ensuring that only the first plot will have axis labels.
       }
-      
-      if (!(taxa %in% get_legend_species()) && j >= 1) {
-        plot <- plot + guides(color = "none", shape = "none", size = "none", linetype = "none")                  #Making the legend to include all the necessary information without repeating. Refer to get_legend_species function line ~315
-      }
+
+      # if (!(taxa %in% get_legend_species()) && j >= 1) {
+      #   plot <- plot + guides(color = "none", shape = "none", size = "none", linetype = "none")                  #Making the legend to include all the necessary information without repeating. Refer to get_legend_species function line ~315
+      # }
       j <- j + 1
       i <- i + 1
-    
+
       plots[[paste0(SpeciesNamesSciNorm[taxa], ', ', region)]] <- plot
     }
   }
-  patchwork <- wrap_plots(plots, ncol = 4, guides = 'collect')+
-  plot_annotation(title = "1 Year Predicted Risk Plots", theme = theme(plot.title = element_text(size = 35)))&
-  theme(legend.position = 'right')
-  return (patchwork)
+  # patchwork <- wrap_plots(plots, ncol = 4, guides = 'collect')+
+  # plot_annotation(title = "1 Year Predicted Risk Plots", theme = theme(plot.title = element_text(size = 35)))&
+  # theme(legend.position = 'right')
+  # return (patchwork)
+  # 
+  patchwork <- wrap_plots(plots, ncol = 4, guides = "collect") +
+    plot_annotation(
+      title = "1 Year Predicted Risk Plots",
+      theme = theme(plot.title = element_text(size = 35))
+    ) &
+    theme(legend.position = "right")
+  
+  return(patchwork)
+  
 })
-  
-  
+
+
   
 
 ### 10 Year Prediction Risk Plots ###
@@ -570,6 +585,7 @@ make_10year_prediction_plot <- reactive( {
   for (taxa in taxaSelected) {                                                                                                  #TAKING THE MEAN OF ALL ZOOP TO MAKE A COMPARABLE LINE PLOT
     taxa_spec_data <-Predict10yrData %>% filter(Predator== SpeciesNamesSciNorm[taxa]) %>% filter(Region %in% regionSelected)
     Predict10yrData$Region <- factor(Predict10yrData$Region, levels = c("Delta", "Confluence" , "Suisun Bay", "San Pablo Bay"))
+  
     taxa_spec_data<-taxa_spec_data %>%
       group_by(Region, Timesteps, Group) %>% unique() %>%
       mutate(Meanprob=mean(Probability))%>% 
@@ -634,22 +650,18 @@ make_10year_prediction_plot <- reactive( {
       if (i >= 1) {
         plot <- plot + theme(axis.title.x = element_blank(), axis.title.y = element_blank())                #Ensuring that only the first plot will have axis labels.
       }
-      if ((taxa %in% get_legend_species())) {
-        
-      }
-      else {
-        plot <- plot + guides(color = "none", shape = "none", size = "none", linetype = 'none', fill = 'none')                   #Making the legend to include all the necessary information without repeating. Refer to get_legend_species function line ~315
-      }
-      
-      i <- i + 1
     
     
       plots[[paste0(SpeciesNamesSciNorm[taxa], ', ', region)]] <- plot
     }
   }
-  patchwork <- wrap_plots(plots, ncol = 4, guides = 'collect')+
-  plot_annotation(title = "10 Year Predicted Risk Plots", theme = theme(plot.title = element_text(size = 35)))&
-  theme(legend.position = 'right')
+  patchwork <- wrap_plots(plots, ncol = 4, guides = "collect") +
+    plot_annotation(
+      title = "10 Year Predicted Risk Plots",
+      theme = theme(plot.title = element_text(size = 35))
+    ) &
+    theme(legend.position = "right")
+  
   return (patchwork)
 })
 
