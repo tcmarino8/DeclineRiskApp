@@ -155,7 +155,7 @@ ui <- fluidPage(
     div( style = "width: 30%; float: left; box-sizing: border-box;",                                   #Left hand side Tab Bar
       sidebarPanel(
         conditionalPanel(
-          condition = " input.Tabs =='Map' || input.Tabs == 'Station Data' ",
+          condition = " input.Tabs =='Map' || input.Tabs == 'StationData' ",
           checkboxInput(                                                                                 #Creating Check Box input for Fish Stations
           "fish_stations",
           "Display Fish Stations",
@@ -172,7 +172,7 @@ ui <- fluidPage(
           condition = " input.Tabs == 'Phenology of Risk' 
           || input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data'
+          || input.Tabs == 'StationData'
           || input.Tabs == 'Map'",
           selectInput(                                                                            #Creating Check box input for regions
             'region',
@@ -185,7 +185,7 @@ ui <- fluidPage(
           condition = " input.Tabs == 'Phenology of Risk' 
           || input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data'",
+          || input.Tabs == 'StationData'",
           
           selectInput(
             'fish',
@@ -198,7 +198,7 @@ ui <- fluidPage(
         conditionalPanel(                                                                                #Creating Inputs for Species
           condition = "input.Tabs == '1 Year Risk Predictions'
           || input.Tabs == '10 Year Risk Predictions' 
-          || input.Tabs == 'Station Data' ",
+          || input.Tabs == 'StationData' ",
         selectInput(
           'zoops',
           'Select Zooplankton',
@@ -267,7 +267,11 @@ ui <- fluidPage(
                      tabPanel('10 Year Risk Predictions', value = '10yrplots',
                               fluidRow(div(textOutput('TYP_blurb'), class = 'custom-text'), hr(), plotOutput("TenYearPlot", width = "100%", height = "90vh"))),
                      tabPanel('Station Data', value = "StationData",
-                              fluidRow(div(textOutput('StationData_blurb'), class = 'custom-text'), hr(), DTOutput("Station_data"), plotOutput("histogram"))),
+                              fluidRow(div(textOutput('StationData_blurb'), class = 'custom-text'), hr(),
+                                         DTOutput("Station_data", height = "500px"),
+                                         leafletOutput('StationMap', height = "500px")
+                                       )),
+                                       # \DTOutput("Station_data"), leafletOutput('StationMap'))),
                      tabPanel('Additional Information',
                               fluidRow(div(uiOutput('LinktoDataBlurb', class = 'custom-text')), 
                                        hr(),
@@ -365,7 +369,7 @@ get_plot_height <- function(POR = FALSE){
     #This table populates the map.
 
 FetchStationSummaryData <- reactive({
-  req(input$fish, input$zooplankton_stations, input$region, input$fish_stations)
+  req(input$region)
   filtered_data <- StationSummaryData
   filtered_data <- filtered_data |> dplyr::filter(Region %in% input$region)                                               # Filter by region
   # Filter based on group input (fish or zooplankton)
@@ -378,10 +382,24 @@ FetchStationSummaryData <- reactive({
   } else {                                                                                                                # Neither fish nor zooplankton selected, return an empty data frame
     return(filtered_data[0, ])
   }
-  
   return(filtered_data)
 })
 
+FetchDataSummaryTable <- reactive({
+  req(input$fish, input$zoops, input$region)
+  
+  fish_species <- input$fish %||% character(0)
+  zoop_species <- input$zoop %||% character(0)
+  species <- c(input$fish, input$zoops)
+  species_pattern <- paste(species, collapse = "|")
+  
+  filtered_type_data <- FetchStationSummaryData()
+  filtered_species <- filtered_type_data %>% filter(
+    Region %in% input$region,
+    str_detect(Taxa, species_pattern)
+    
+  )
+})
 
 
 
@@ -688,6 +706,7 @@ make_10year_prediction_plot <- reactive( {
     center = list(lat = 37.48549685534591163, lng = -122.1670034591194991)  # Default center
   )
   
+
   
 ####  UPON ACTIVITY ON THE APP #### 
   
@@ -775,13 +794,106 @@ make_10year_prediction_plot <- reactive( {
       
       
       #### Station Meta Data and blurb ###
-      output$Station_data <- renderDT({datatable(FetchStationSummaryData(), 
-          selection = 'none', 
+      output$Station_data <- renderDT({
+          
+        datatable(FetchDataSummaryTable(), 
+          selection = 'single', 
           options = list(
-          scrollX = TRUE  # Enable horizontal scroll if needed
+          scrollY = "400px", 
+          scrollCollapse = TRUE, 
+          paging = FALSE,
+          scrollX = TRUE  
         ))
       })                             #Dynamic Table for Metadata
       output$StationData_blurb <- renderText(StationData_Blurb)
+      
+      # Update zoom and center from input
+      if (!is.null(input$StationMap_zoom)) {
+        map_state$zoom <- input$StationMap_zoom  # Update zoom
+      }
+      if (!is.null(input$StationMap_center)) {
+        map_state$center <- input$StationMap_center  # Update center as list
+      }
+      
+      # --- MAP RENDER ---
+      output$StationMap <- renderLeaflet({
+        df <- FetchDataSummaryTable()
+        leaflet(df) %>%
+          addProviderTiles("Esri.WorldStreetMap") %>%
+          addCircleMarkers(
+            lng = ~Longitude,
+            lat = ~Latitude,
+            layerId = ~Station,  # Key connection
+            popup = ~paste0(
+              "<b>", Group, " Station ", Station, "</b><br>",
+              "Region: ", Region, "<br>",
+              "Observed: ", Taxa
+            ),
+            label = ~paste(Station),
+            labelOptions = labelOptions(textsize = "18px"),
+            color = ~ifelse(Group == "Fish", "black", "maroon"),
+            radius = 7,
+            fillOpacity = 1,
+            stroke = FALSE
+          ) %>%
+          addLegend(
+            position = "bottomright",
+            colors = c("black", "maroon"),
+            labels = c("Fish Stations", "Zooplankton Stations"),
+            opacity = 1
+          )
+      })
+      
+      # --- 1️⃣ TABLE → MAP ---
+      observeEvent(input$Station_data_rows_selected, {
+        req(input$Station_data_rows_selected)
+        
+        df <- FetchDataSummaryTable()
+        sel_idx <- input$Station_data_rows_selected
+        if (length(sel_idx) == 0) return()
+        
+        # Get the Station name for the selected row
+        selected_station <- df$Station[sel_idx]
+        selected_row <- df[df$Station == selected_station, ]
+        
+        leafletProxy("StationMap") %>%
+          clearPopups() %>%
+          addPopups(
+            lng = selected_row$Longitude,
+            lat = selected_row$Latitude,
+            popup = paste0(
+              "<b>", selected_row$Group, " Station ", selected_row$Station, "</b><br>",
+              "Region: ", selected_row$Region, "<br>",
+              "Observed: ", selected_row$Taxa
+            )
+          ) %>%
+          setView(lng = selected_row$Longitude, lat = selected_row$Latitude, zoom = 10)
+      })
+      
+      # --- 2️⃣ MAP → TABLE ---
+      observeEvent(input$StationMap_marker_click, {
+        click <- input$StationMap_marker_click
+        req(click$id)
+        
+        df <- FetchDataSummaryTable()
+        
+        # Find the row that matches the marker ID
+        idx <- which(df$Station == click$id)
+        if (length(idx) != 1) return()
+        
+        proxy <- dataTableProxy("Station_data")
+        selectRows(proxy, idx)
+        
+        # Optional: move to the page that contains that row
+        n_per_page <- 10  # change if you display a different number per page
+        page_num <- ceiling(idx / n_per_page)
+        selectPage(proxy, page_num)
+      })
+      
+      
+      
+      
+      
       
       
       #### Additional Information blurbs + links ###
