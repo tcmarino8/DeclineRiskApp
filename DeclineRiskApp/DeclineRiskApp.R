@@ -169,9 +169,9 @@ ui <- fluidPage(
           hr(),                                                                                          #Horizontal Line
         ),
         conditionalPanel(                                                                                #Creating Inputs for Species
-          condition = " input.Tabs == 'Phenology of Risk' 
-          || input.Tabs == '1 Year Risk Predictions'
-          || input.Tabs == '10 Year Risk Predictions' 
+          condition = " input.Tabs == 'POR' 
+          || input.Tabs == '1yrplots'
+          || input.Tabs == '10yrplots' 
           || input.Tabs == 'StationData'
           || input.Tabs == 'Map'",
           selectInput(                                                                            #Creating Check box input for regions
@@ -182,9 +182,9 @@ ui <- fluidPage(
             multiple = TRUE
           )),
         conditionalPanel(                                                                                #Creating Inputs for Species
-          condition = " input.Tabs == 'Phenology of Risk' 
-          || input.Tabs == '1 Year Risk Predictions'
-          || input.Tabs == '10 Year Risk Predictions' 
+          condition = " input.Tabs == 'POR' 
+          || input.Tabs == '1yrplots'
+          || input.Tabs == '10yrplots' 
           || input.Tabs == 'StationData'",
           
           selectInput(
@@ -196,8 +196,7 @@ ui <- fluidPage(
           )
         ),
         conditionalPanel(                                                                                #Creating Inputs for Species
-          condition = "input.Tabs == '1 Year Risk Predictions'
-          || input.Tabs == '10 Year Risk Predictions' 
+          condition = "input.Tabs == '1yrplots'
           || input.Tabs == 'StationData' ",
         selectInput(
           'zoops',
@@ -210,7 +209,7 @@ ui <- fluidPage(
       
 
         conditionalPanel(
-          condition = " input.Tabs =='1 Year Risk Predictions' ",
+          condition = " input.Tabs =='1yrplots' ",
           sliderInput(                                                                                  #Slider input for years from Present
             "SliderYFP1", label="Year From Present",
             min=1, max=10, value=1, step= 1,                                                       #, animate=TRUE     To see evolution over time.
@@ -218,7 +217,7 @@ ui <- fluidPage(
           hr(),                                                                                         #Horizontal Line
         ),
         conditionalPanel(
-          condition = " input.Tabs =='10 Year Risk Predictions' ",
+          condition = " input.Tabs =='10yrplots' ",
           sliderInput(                                                                                  #Slider input for years from Present
             "SliderYFP", label="Years From Present",
             min=1, max=10, value= 10, step= 1                                                      #, animate=TRUE     To see evolution over time.
@@ -226,7 +225,7 @@ ui <- fluidPage(
           hr(),                                                                                         #Horizontal Line
         ),
         conditionalPanel(
-          condition = " input.Tabs =='Phenology of Risk' ",
+          condition = " input.Tabs =='POR' ",
           sliderTextInput(                                                                                  #Slider input for years from Present
             inputId = "SliderMonths", label="Months",
             choices = month.name,
