@@ -133,8 +133,13 @@ months <- c("January", "February", "March", "April", "May", "June",
 
 ## ----ShinyApp--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ui <- fluidPage(
-  tags$head(
-    tags$script(HTML("
+  titlePanel(div(h3("Bay-Delta Data Explorer"), h1("Phenology-informed decline risk of estuarine fishes and their prey suggests potential for future trophic mismatches"))),
+  
+  hr(),
+  
+  fluidRow(            
+    tags$head(
+      tags$script(HTML("
       document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('a[href^=\"#\"]').forEach(function(link) {
           link.addEventListener('click', function(e) {
@@ -146,12 +151,7 @@ ui <- fluidPage(
         });
       });
     "))
-  ),
-  titlePanel(div(h3("Bay-Delta Data Explorer"), h1("Phenology-informed decline risk of estuarine fishes and their prey suggests potential for future trophic mismatches"))),
-  
-  hr(),
-  
-  fluidRow(                                                        
+    ),
     div( style = "width: 30%; float: left; box-sizing: border-box;",                                   #Left hand side Tab Bar
       sidebarPanel(
         conditionalPanel(
@@ -252,8 +252,7 @@ ui <- fluidPage(
     "))
     )
     ),
-    
-    div( style = "width: 70%; float: left; box-sizing: border-box;",                                          
+    div( style = "width: 70%; float: left; box-sizing: border-box;",
       mainPanel(
         tabsetPanel( id = 'Tabs',
                      tabPanel("Guidlines", includeMarkdown("DeclineRisk.md")),
